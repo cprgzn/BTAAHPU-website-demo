@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AHPU.DAO | 安徽工程大学区块链协会demo</title>
+    <meta name="description" content="合作，交流，创新 · 共建区块链和谐社区">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans SC"', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0B0C15',
+                            card: 'rgba(23, 25, 35, 0.7)',
+                            primary: '#6366F1', // Indigo
+                            accent: '#8B5CF6', // Violet
+                            cyan: '#06B6D4',
+                            glow: 'rgba(99, 102, 241, 0.5)'
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0C15;
+            color: #ffffff;
+            overflow-x: hidden; /* 防止横向滚动条出现 */
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0C15;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3730a3;
+            border-radius: 4px;
+        }
+
+        /* 玻璃拟态 */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .glass-nav {
+            background: rgba(11, 12, 21, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 动态背景网格 */
+        .bg-grid {
+            background-size: 50px 50px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        /* 滚动出现动画 */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 侧边导航点样式 */
+        .nav-dot {
+            transition: all 0.3s ease;
+        }
+        .nav-dot.active {
+            background-color: #6366F1;
+            transform: scale(1.3);
+            border-color: #6366F1;
+        }
+        .nav-tooltip {
+            opacity: 0;
+            transform: translateX(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .nav-dot:hover .nav-tooltip {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* 核心团队横向滚动容器 */
+        .team-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 2rem;
+            padding: 1rem 0.5rem 2rem 0.5rem;
+            scroll-behavior: smooth;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .team-scroll-container::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Chrome/Safari/Opera */
+        }
+        
+        /* 隐藏元素的类 (用于移动端) */
+        .hidden-force {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-primary selection:text-white relative">
+
+    <!-- 背景装饰 -->
+    <div class="fixed inset-0 z-[-1] pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-brand-primary rounded-full mix-blend-screen filter blur-[120px] opacity-20 animate-pulse-slow"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-brand-accent rounded-full mix-blend-screen filter blur-[120px] opacity-20 animate-pulse-slow" style="animation-delay: 2s;"></div>
+        <div class="absolute inset-0 bg-grid z-[-1]"></div>
+    </div>
+
+    <!-- 顶部导航栏 -->
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer">
+                    <img src="https://t1.chatglm.cn/file/6950e6dab44e1ccbdd3cb337.png?expired_at=1767341922&sign=52d48edd804017c9bfa5ff224f1b5919&ext=png" alt="AHPU Logo" class="h-10 w-auto object-contain">
+                    <span class="font-mono font-bold text-xl tracking-wide text-white">AHPU<span class="text-brand-primary">.DAO</span></span> demo
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="hover:text-brand-cyan transition-colors px-3 py-2 rounded-md text-sm font-medium">首页</a>
+                        <a href="#about" class="hover:text-brand-cyan transition-colors px-3 py-2 rounded-md text-sm font-medium">关于协会</a>
+                        <a href="#team" class="hover:text-brand-cyan transition-colors px-3 py-2 rounded-md text-sm font-medium">核心团队</a>
+                        <a href="#events" class="hover:text-brand-cyan transition-colors px-3 py-2 rounded-md text-sm font-medium">精彩活动</a>
+                        <a href="#join" class="bg-white/10 hover:bg-brand-primary hover:text-white border border-white/10 text-white px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-brand-primary/50">
+                            加入我们
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="-mr-2 flex md:hidden">
+                    <button type="button" onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10 focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-brand-dark/95 backdrop-blur-xl border-b border-white/10 absolute w-full" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#home" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">首页</a>
+                <a href="#about" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">关于协会</a>
+                <a href="#team" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">核心团队</a>
+                <a href="#events" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">精彩活动</a>
+                <a href="#join" class="text-brand-cyan block px-3 py-2 rounded-md text-base font-medium font-bold">加入我们</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 侧边极简导航栏 (保留) -->
+    <nav class="fixed right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col gap-6">
+        <a href="#home" class="nav-dot group relative w-3 h-3 rounded-full border border-white/50 bg-transparent hover:bg-white/20" data-target="home">
+            <span class="nav-tooltip absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 px-2 py-1 rounded text-xs text-white whitespace-nowrap backdrop-blur">首页</span>
+        </a>
+        <a href="#about" class="nav-dot group relative w-3 h-3 rounded-full border border-white/50 bg-transparent hover:bg-white/20" data-target="about">
+            <span class="nav-tooltip absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 px-2 py-1 rounded text-xs text-white whitespace-nowrap backdrop-blur">关于</span>
+        </a>
+        <a href="#team" class="nav-dot group relative w-3 h-3 rounded-full border border-white/50 bg-transparent hover:bg-white/20" data-target="team">
+            <span class="nav-tooltip absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 px-2 py-1 rounded text-xs text-white whitespace-nowrap backdrop-blur">团队</span>
+        </a>
+        <a href="#events" class="nav-dot group relative w-3 h-3 rounded-full border border-white/50 bg-transparent hover:bg-white/20" data-target="events">
+            <span class="nav-tooltip absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 px-2 py-1 rounded text-xs text-white whitespace-nowrap backdrop-blur">活动</span>
+        </a>
+        <a href="#join" class="nav-dot group relative w-3 h-3 rounded-full border border-white/50 bg-transparent hover:bg-white/20" data-target="join">
+            <span class="nav-tooltip absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 px-2 py-1 rounded text-xs text-white whitespace-nowrap backdrop-blur">加入</span>
+        </a>
+    </nav>
+
+    <!-- Hero Section (Full Screen) -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-brand-primary/30 text-brand-cyan text-sm font-medium mb-8 animate-float">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-cyan opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-cyan"></span>
+                </span>
+                AHPU 区块链技术协会招新进行中
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-6">
+                合作  交流  创新<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-accent to-brand-cyan">共建区块链和谐社区</span>
+            </h1>
+            
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-400 mb-10">
+                来自安徽工程大学，我们致力于打造开放、共享、创新的技术交流平台，探索 Web3 的无限边界。
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#join" class="px-8 py-4 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent text-white font-bold text-lg hover:scale-105 transition-transform shadow-lg shadow-brand-primary/40">
+                    加入社区 <i class="fa-solid fa-arrow-right ml-2"></i>
+                </a>
+                <a href="#about" class="px-8 py-4 rounded-full glass text-white font-medium text-lg hover:bg-white/10 transition-colors">
+                    了解更多
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section (Full Screen, Restored Style) -->
+    <section id="about" class="min-h-screen py-24 relative flex items-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div class="reveal">
+                    <h2 class="text-brand-primary font-bold tracking-wide uppercase text-sm mb-2">关于我们</h2>
+                    <h3 class="text-3xl md:text-4xl font-bold mb-6">安工程学子<br>探索 Web3 的大本营</h3>
+                    <p class="text-gray-400 text-lg mb-6 leading-relaxed">
+                        AHPU.DAO 成立于安徽工程大学，我们致力于打破区块链技术的学习壁垒。无论你是数理学院的建模达人、还是计信学院的代码大神，亦或是智能院的算法精英，还有来自其他学院对数字经济感兴趣的同学，这里都是你接触前沿科技的起点。
+                    </p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <span class="text-gray-300">每月线下技术沙龙</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <span class="text-gray-300">名企实习与内推机会</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <span class="text-gray-300">跨学科项目组队实战</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="relative reveal delay-200">
+                    <div class="absolute -inset-4 bg-gradient-to-r from-brand-primary to-brand-cyan rounded-2xl opacity-20 blur-lg"></div>
+                    <div class="relative glass rounded-2xl p-8 border border-white/10">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white/5 p-6 rounded-xl hover:bg-white/10 transition-colors group">
+                                <i class="fa-solid fa-book-open text-3xl text-brand-cyan mb-4 group-hover:scale-110 transition-transform"></i>
+                                <h4 class="font-bold text-lg">知识库</h4>
+                                <p class="text-sm text-gray-400 mt-2">共享学习资源</p>
+                            </div>
+                            <div class="bg-white/5 p-6 rounded-xl hover:bg-white/10 transition-colors group">
+                                <i class="fa-solid fa-laptop-code text-3xl text-brand-accent mb-4 group-hover:scale-110 transition-transform"></i>
+                                <h4 class="font-bold text-lg">实战营</h4>
+                                <p class="text-sm text-gray-400 mt-2">手把手教你开发</p>
+                            </div>
+                            <div class="bg-white/5 p-6 rounded-xl hover:bg-white/10 transition-colors group">
+                                <i class="fa-solid fa-people-group text-3xl text-pink-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                                <h4 class="font-bold text-lg">校友圈</h4>
+                                <p class="text-sm text-gray-400 mt-2">连接行业前辈</p>
+                            </div>
+                            <div class="bg-white/5 p-6 rounded-xl hover:bg-white/10 transition-colors group">
+                                <i class="fa-solid fa-trophy text-3xl text-yellow-500 mb-4 group-hover:scale-110 transition-transform"></i>
+                                <h4 class="font-bold text-lg">黑客松</h4>
+                                <p class="text-sm text-gray-400 mt-2">赢取奖金与荣誉</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section (Full Screen, Draggable) -->
+    <section id="team" class="min-h-screen py-24 bg-black/20 flex flex-col justify-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="mb-12 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">核心团队</h2>
+                <p class="text-gray-400">左右滑动查看指导老师与协会骨干</p>
+            </div>
+
+            <!-- Row 1: Teachers & Leaders -->
+            <div class="mb-12">
+                <h3 class="text-xl font-bold text-brand-primary mb-4 ml-2">指导老师 & 核心管理层</h3>
+                <div class="team-scroll-container">
+                    <!-- Card 1 -->
+                    <div class="flex-shrink-0 w-72 glass rounded-2xl p-6 text-center group hover:-translate-y-2 transition-transform duration-300 border border-white/5">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 p-1">
+                            <div class="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
+                                <i class="fa-solid fa-chalkboard-user text-3xl text-gray-400"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">包老师</h3>
+                        <p class="text-brand-primary text-sm font-medium mb-3">协会指导老师</p>
+                        <p class="text-gray-400 text-xs">计算机与信息学院，研究方向为分布式系统与密码学。</p>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="flex-shrink-0 w-72 glass rounded-2xl p-6 text-center group hover:-translate-y-2 transition-transform duration-300 border border-white/5">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-brand-primary to-blue-600 p-1">
+                            <div class="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                <i class="fa-solid fa-user-astronaut text-3xl text-brand-primary"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">程同学</h3>
+                        <p class="text-brand-cyan text-sm font-medium mb-3">协会会长</p>
+                        <p class="text-gray-400 text-xs">全栈开发者，以太坊爱好者，曾获省级区块链大赛二等奖。</p>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="flex-shrink-0 w-72 glass rounded-2xl p-6 text-center group hover:-translate-y-2 transition-transform duration-300 border border-white/5">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-brand-accent to-purple-600 p-1">
+                            <div class="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                <i class="fa-solid fa-code text-3xl text-brand-accent"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">孙同学</h3>
+                        <p class="text-brand-accent text-sm font-medium mb-3">技术部部长</p>
+                        <p class="text-gray-400 text-xs">Solidity 智能合约开发专家，负责协会内部技术培训。</p>
+                    </div>
+                     <!-- Card 4 -->
+                     <div class="flex-shrink-0 w-72 glass rounded-2xl p-6 text-center group hover:-translate-y-2 transition-transform duration-300 border border-white/5">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 p-1">
+                            <div class="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                                <i class="fa-solid fa-bullhorn text-3xl text-pink-500"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">王同学</h3>
+                        <p class="text-pink-500 text-sm font-medium mb-3">外联部部长</p>
+                        <p class="text-gray-400 text-xs">负责社团对外联络、赞助洽谈及活动策划。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Members -->
+            <div>
+                <h3 class="text-xl font-bold text-brand-cyan mb-4 ml-2">优秀成员</h3>
+                <div class="team-scroll-container">
+                    <!-- Member 1 -->
+                    <div class="flex-shrink-0 w-64 glass rounded-xl p-5 text-center group hover:bg-white/5 transition-colors">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center">
+                            <i class="fa-solid fa-user text-gray-500"></i>
+                        </div>
+                        <h4 class="font-bold text-white">陈同学</h4>
+                        <p class="text-xs text-gray-500">前端开发</p>
+                    </div>
+                    <!-- Member 2 -->
+                    <div class="flex-shrink-0 w-64 glass rounded-xl p-5 text-center group hover:bg-white/5 transition-colors">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center">
+                            <i class="fa-solid fa-user text-gray-500"></i>
+                        </div>
+                        <h4 class="font-bold text-white">赵同学</h4>
+                        <p class="text-xs text-gray-500">Rust 开发</p>
+                    </div>
+                    <!-- Member 3 -->
+                    <div class="flex-shrink-0 w-64 glass rounded-xl p-5 text-center group hover:bg-white/5 transition-colors">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center">
+                            <i class="fa-solid fa-user text-gray-500"></i>
+                        </div>
+                        <h4 class="font-bold text-white">孙同学</h4>
+                        <p class="text-xs text-gray-500">UI 设计</p>
+                    </div>
+                     <!-- Member 4 -->
+                     <div class="flex-shrink-0 w-64 glass rounded-xl p-5 text-center group hover:bg-white/5 transition-colors">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center">
+                            <i class="fa-solid fa-user text-gray-500"></i>
+                        </div>
+                        <h4 class="font-bold text-white">周同学</h4>
+                        <p class="text-xs text-gray-500">运营</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events Section (Full Screen, Restored Style) -->
+    <section id="events" class="min-h-screen py-24 flex items-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">近期活动</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">参与我们的线下聚会和线上研讨会，与安工程的极客们一起头脑风暴。</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Event Card 1 -->
+                <div class="glass rounded-2xl overflow-hidden hover:-translate-y-2 transition-transform duration-300 reveal group">
+                    <div class="h-48 bg-gradient-to-br from-indigo-900 to-purple-900 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30"></div>
+                        <div class="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg text-sm border border-white/20">
+                            <i class="fa-regular fa-calendar mr-2"></i> 10月 24日
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-brand-primary/20 text-brand-primary text-xs px-2 py-1 rounded font-bold">WORKSHOP</span>
+                            <span class="text-gray-500 text-xs">线下</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-brand-primary transition-colors">Solidity 智能合约开发入门</h3>
+                        <p class="text-gray-400 text-sm mb-4">从零开始编写你的第一个 ERC20 代币，需要自带笔记本电脑。</p>
+                        <a href="#" class="text-brand-cyan text-sm font-medium hover:underline">立即报名 <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                    </div>
+                </div>
+
+                <!-- Event Card 2 -->
+                <div class="glass rounded-2xl overflow-hidden hover:-translate-y-2 transition-transform duration-300 reveal delay-100 group">
+                    <div class="h-48 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
+                        <div class="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg text-sm border border-white/20">
+                            <i class="fa-regular fa-calendar mr-2"></i> 11月 05日
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-pink-500/20 text-pink-500 text-xs px-2 py-1 rounded font-bold">HACKATHON</span>
+                            <span class="text-gray-500 text-xs">48小时</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-brand-primary transition-colors">2024 校园 Web3 黑客松</h3>
+                        <p class="text-gray-400 text-sm mb-4">组队挑战，赢取丰厚奖金与实习 Offer。主题涵盖 DeFi, GameFi 等。</p>
+                        <a href="#" class="text-brand-cyan text-sm font-medium hover:underline">查看详情 <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                    </div>
+                </div>
+
+                <!-- Event Card 3 -->
+                <div class="glass rounded-2xl overflow-hidden hover:-translate-y-2 transition-transform duration-300 reveal delay-200 group">
+                    <div class="h-48 bg-gradient-to-br from-cyan-900 to-blue-900 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-30"></div>
+                        <div class="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg text-sm border border-white/20">
+                            <i class="fa-regular fa-calendar mr-2"></i> 每周五晚
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-brand-cyan/20 text-brand-cyan text-xs px-2 py-1 rounded font-bold">SEMINAR</span>
+                            <span class="text-gray-500 text-xs">线上 Zoom</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 group-hover:text-brand-primary transition-colors">行业前沿研读会</h3>
+                        <p class="text-gray-400 text-sm mb-4">深度解读以太坊最新升级、零知识证明进展与 Layer2 赛道分析。</p>
+                        <a href="#" class="text-brand-cyan text-sm font-medium hover:underline">加入会议 <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Join Section (Full Screen, Kept New Style) -->
+    <section id="join" class="min-h-screen py-24 relative overflow-hidden flex items-center">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-brand-primary/20 blur-[100px] rounded-full pointer-events-none"></div>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+            <div class="glass rounded-3xl p-8 md:p-16 text-center border border-brand-primary/30 shadow-2xl shadow-brand-primary/10 reveal">
+                <h2 class="text-3xl md:text-5xl font-bold mb-6">加入 AHPU.DAO</h2>
+                <p class="text-gray-300 text-lg mb-12 max-w-2xl mx-auto">
+                    对区块链充满好奇？想找到志同道合的伙伴？<br>扫描下方二维码加入我们的招新群，或直接联系负责人。
+                </p>
+                
+                <div class="flex flex-col md:flex-row justify-center items-center gap-12">
+                    <!-- QR Code Placeholder -->
+                    <div class="bg-white p-4 rounded-2xl shadow-xl">
+                        <!-- 这里使用占位图，实际使用时请替换为真实的微信群二维码图片 -->
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://github.com" alt="招新群二维码" class="w-48 h-48 object-contain">
+                        <p class="text-gray-900 text-center text-sm mt-2 font-bold">扫码加入招新群</p>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="text-left space-y-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary text-xl">
+                                <i class="fa-brands fa-weixin"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">官方微信 (会长)</p>
+                                <p class="text-xl font-bold text-white">AHPU_Blockchain</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-brand-accent/20 flex items-center justify-center text-brand-accent text-xl">
+                                <i class="fa-regular fa-envelope"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">合作/咨询邮箱</p>
+                                <p class="text-xl font-bold text-white">contact@ahpu-dao.org</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-brand-cyan/20 flex items-center justify-center text-brand-cyan text-xl">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 text-sm">线下活动地点</p>
+                                <p class="text-xl font-bold text-white">师生活动中心 302</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer (Updated with Links) -->
+    <footer class="border-t border-white/5 bg-black/40 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
+                <!-- Logo & Intro -->
+                <div class="col-span-1 lg:col-span-2">
+                    <div class="flex items-center gap-2 mb-4">
+                        <img src="https://t1.chatglm.cn/file/6950e6dab44e1ccbdd3cb337.png?expired_at=1767341922&sign=52d48edd804017c9bfa5ff224f1b5919&ext=png" alt="Logo" class="h-8 w-auto">
+                        <span class="font-mono font-bold text-xl">AHPU.DAO</span>
+                    </div>
+                    <p class="text-gray-500 text-sm max-w-sm mb-6">
+                        安徽工程大学区块链协会。连接校园与未来的去中心化组织。
+                    </p>
+                    <div class="flex gap-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fa-brands fa-weixin text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fa-brands fa-github text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors"><i class="fa-brands fa-qq text-xl"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="font-bold mb-4 text-white">快速链接</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#about" class="hover:text-brand-primary transition-colors">关于我们</a></li>
+                        <li><a href="#events" class="hover:text-brand-primary transition-colors">近期活动</a></li>
+                        <li><a href="#team" class="hover:text-brand-primary transition-colors">核心团队</a></li>
+                        <li><a href="#join" class="hover:text-brand-primary transition-colors">加入招新群</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 class="font-bold mb-4 text-white">联系我们</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-location-dot mt-1"></i>
+                            <span>安徽工程大学<br>师生活动中心</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fa-brands fa-weixin"></i>
+                            <span>AHPU_Blockchain</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- New: Friendly Links -->
+                <div>
+                    <h4 class="font-bold mb-4 text-white">友情链接</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold mb-1">高校联盟</p>
+                            <ul class="space-y-1 text-sm text-gray-400">
+                                <li><a href="https://pkublockchain.com/" target="_blank" class="hover:text-brand-primary transition-colors">北大区块链协会</a></li>
+                                <li><a href="https://acm.sjtu.edu.cn/~htftsy/index.html" target="_blank" class="hover:text-brand-primary transition-colors">上海交大区块链协会</a></li>
+                                <li><a href="https://docs.zjubca.org/" target="_blank" class="hover:text-brand-primary transition-colors">浙江大学区块链协会</a></li>
+                                <li><a href="https://edc.ah.edu.cn/" target="_blank" class="hover:text-brand-primary transition-colors">安徽省高校区块链联盟</a></li>
+                            </ul>
+                        </div>
+                        <div class="pt-2">
+                            <p class="text-xs text-gray-500 uppercase font-semibold mb-1">技术平台</p>
+                            <ul class="space-y-1 text-sm text-gray-400">
+                                <li><a href="https://www.fisco.com.cn/fisco_20.html" target="_blank" class="hover:text-brand-primary transition-colors">FISCO BCOS</a></li>
+                                <li><a href="https://doc-fabric.readthedocs.io/en/latest/" target="_blank" class="hover:text-brand-primary transition-colors">Hyperledger Fabric</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-600 text-sm">© 2024 AHPU.DAO. All rights reserved.</p>
+                <div class="flex gap-4 text-gray-600 text-sm">
+                    <a href="#" class="hover:text-gray-400">隐私政策</a>
+                    <a href="#" class="hover:text-gray-400">免责声明</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Scroll Reveal Animation
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 100;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", reveal);
+        reveal();
+
+        // Side Navigation Active State Logic
+        const sections = document.querySelectorAll('section');
+        const navDots = document.querySelectorAll('.nav-dot');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - sectionHeight / 3)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navDots.forEach(dot => {
+                dot.classList.remove('active');
+                if (dot.getAttribute('data-target') === current) {
+                    dot.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
